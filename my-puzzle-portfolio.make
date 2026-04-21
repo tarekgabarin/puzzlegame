@@ -119,13 +119,15 @@ GENERATED :=
 OBJECTS :=
 
 GENERATED += $(OBJDIR)/base_arena.o
+GENERATED += $(OBJDIR)/level.o
+GENERATED += $(OBJDIR)/level_runner.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/platform.o
-GENERATED += $(OBJDIR)/test_level.o
 OBJECTS += $(OBJDIR)/base_arena.o
+OBJECTS += $(OBJDIR)/level.o
+OBJECTS += $(OBJDIR)/level_runner.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/platform.o
-OBJECTS += $(OBJDIR)/test_level.o
 
 # Rules
 # #############################################
@@ -192,13 +194,16 @@ endif
 $(OBJDIR)/base_arena.o: src/base_arena.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/level.o: src/level.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/level_runner.o: src/level_runner.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: src/main.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/platform.o: src/platform.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/test_level.o: src/test_level.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

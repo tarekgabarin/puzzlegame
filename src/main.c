@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include "base_arena.h"
 #include "platform.h"
-#include "test_level.h"
+#include "level_runner.h"
 
 int main() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
@@ -10,7 +10,10 @@ int main() {
     InitPlatformResources();
 
     Camera3D camera = CreateCamera();
-    RunTestLevel(&camera);
+
+    // TODO: stop hardcoding this once we track which level the player is on
+    // (progress save, main-menu level select, etc.)
+    RunLevel(&camera, "levels/level_1.txt");
 
     UnloadPlatformResources();
     CloseWindow();

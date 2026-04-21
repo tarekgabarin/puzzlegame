@@ -1,0 +1,7 @@
+# Level 1
+# N = normal platform, E = exit, . = empty
+NNNNN
+N...N
+N...N
+N...N
+NNNNE
