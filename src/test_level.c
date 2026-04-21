@@ -3,8 +3,8 @@
 #include "test_level.h"
 
 void RunTestLevel(Camera3D *camera) {
-    Platform normal = { .position = { -1.0f, 0.0f, 0.0f }, .type = PLATFORM_NORMAL };
-    Platform exit   = { .position = {  1.0f, 0.0f, 0.0f }, .type = PLATFORM_EXIT   };
+    Platform normal = { .gridX = 0, .gridZ = 0, .type = PLATFORM_NORMAL };
+    Platform exit   = { .gridX = 1, .gridZ = 0, .type = PLATFORM_EXIT   };
 
     while (!WindowShouldClose()) {
         BeginDrawing();
