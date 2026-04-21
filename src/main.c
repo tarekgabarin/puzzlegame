@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "base_arena.h"
 #include "platform.h"
+#include "player.h"
 #include "level_runner.h"
 
 int main() {
@@ -8,6 +9,7 @@ int main() {
     InitWindow(800, 600, "Engacho");
 
     InitPlatformResources();
+    InitPlayerResources();
 
     Camera3D camera = CreateCamera();
 
@@ -15,6 +17,7 @@ int main() {
     // (progress save, main-menu level select, etc.)
     RunLevel(&camera, "levels/level_1.txt");
 
+    UnloadPlayerResources();
     UnloadPlatformResources();
     CloseWindow();
     return 0;
