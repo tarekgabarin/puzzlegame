@@ -2,8 +2,6 @@
 #include "raylib.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 
 // --- Character classification ---------------------------------------------
 
@@ -50,39 +48,23 @@ static bool IsSkippableLine(const char *line, int length) {
     return true;
 }
 
-// --- Level helpers (occupancy wrappers) -----------------------------------
+// --- Level helpers --------------------------------------------------------
 
 bool IsWalkable(const Level *level, int x, int z) {
     if (x < 0 || x >= level->gridWidth || z < 0 || z >= level->gridHeight) return false;
-    TileCell *cells = EntityMapGet(&level->entities, "player");
-    if (cells == NULL) return false;
-    return cells[z * level->gridWidth + x].platformType != PLATFORM_NONE;
-}
-
-bool HasPlayerAt(const Level *level, int x, int z) {
-    return EntityMapIsPresent(&level->entities, "player", x, z);
-}
-
-bool HasEnemyAt(const Level *level, int x, int z) {
-    return EntityMapAnyPresentWithPrefixAt(&level->entities, "enemy_", x, z);
+    return level->tileTypes[z * level->gridWidth + x] != PLATFORM_NONE;
 }
 
 const Enemy *GetEnemyAt(const Level *level, int x, int z) {
-    if (x < 0 || x >= level->gridWidth || z < 0 || z >= level->gridHeight) return NULL;
     for (int i = 0; i < level->enemyCount; i++) {
         const Enemy *e = &level->enemies[i];
-        if (EntityMapIsPresent(&level->entities, e->name, x, z)) return e;
+        if (e->gridX == x && e->gridZ == z) return e;
     }
     return NULL;
 }
 
-const char *GetEnemyNameAt(const Level *level, int x, int z) {
-    const Enemy *e = GetEnemyAt(level, x, z);
-    return e ? e->name : NULL;
-}
-
-void SetPlayerAt(Level *level, int x, int z, bool present) {
-    EntityMapSetPresent(&level->entities, "player", x, z, present);
+bool HasEnemyAt(const Level *level, int x, int z) {
+    return GetEnemyAt(level, x, z) != NULL;
 }
 
 // --- Loading ---------------------------------------------------------------
@@ -150,17 +132,12 @@ Level LoadLevel(const char *filename) {
     level.enemies = (enemyCount > 0)
         ? (Enemy *)MemAlloc(enemyCount * sizeof(Enemy))
         : NULL;
-    EntityMapInit(&level.entities, gridWidth, gridHeight);
 
-    // Reserve one hash-map entry per named entity; cells start zeroed.
-    EntityMapPut(&level.entities, "player");
-    for (int i = 1; i <= enemyCount; i++) {
-        char name[ENTITY_NAME_LEN];
-        snprintf(name, sizeof(name), "enemy_%d", i);
-        EntityMapPut(&level.entities, name);
-    }
+    int cellCount = gridWidth * gridHeight;
+    level.tileTypes = (PlatformType *)MemAlloc(cellCount * sizeof(PlatformType));
+    for (int i = 0; i < cellCount; i++) level.tileTypes[i] = PLATFORM_NONE;
 
-    // Pass 2: fill platforms[], enemies[], and remember the player spawn.
+    // Pass 2: fill platforms[], enemies[], tileTypes[], and remember the player spawn.
     int platformWriteIdx = 0;
     int enemyWriteIdx    = 0;
     int row              = 0;
@@ -185,6 +162,7 @@ Level LoadLevel(const char *filename) {
                         p->gridX = col;
                         p->gridZ = row;
                         p->type  = pt;
+                        level.tileTypes[row * gridWidth + col] = pt;
                     }
 
                     if (ch == 'P') {
@@ -198,7 +176,6 @@ Level LoadLevel(const char *filename) {
                         e->gridX = col;
                         e->gridZ = row;
                         e->type  = et;
-                        snprintf(e->name, sizeof(e->name), "enemy_%d", enemyWriteIdx);
                     }
 
                     col++;
@@ -210,26 +187,6 @@ Level LoadLevel(const char *filename) {
         }
     }
 
-    // Mirror platform types into every entity's occupancy grid so each cell
-    // carries (present, platformType). Platform types are identical across
-    // entities — only `present` differs.
-    for (int idx = 0; idx < level.platformCount; idx++) {
-        Platform *p = &level.platforms[idx];
-        EntityMapSetPlatform(&level.entities, "player", p->gridX, p->gridZ, p->type);
-        for (int i = 1; i <= enemyCount; i++) {
-            char name[ENTITY_NAME_LEN];
-            snprintf(name, sizeof(name), "enemy_%d", i);
-            EntityMapSetPlatform(&level.entities, name, p->gridX, p->gridZ, p->type);
-        }
-    }
-
-    // Mark spawn tiles as occupied.
-    SetPlayerAt(&level, level.playerStartX, level.playerStartZ, true);
-    for (int i = 0; i < level.enemyCount; i++) {
-        const Enemy *e = &level.enemies[i];
-        EntityMapSetPresent(&level.entities, e->name, e->gridX, e->gridZ, true);
-    }
-
     UnloadFileText(text);
     return level;
 }
@@ -237,7 +194,7 @@ Level LoadLevel(const char *filename) {
 void UnloadLevel(Level *level) {
     if (level->platforms != NULL) MemFree(level->platforms);
     if (level->enemies   != NULL) MemFree(level->enemies);
-    EntityMapFree(&level->entities);
+    if (level->tileTypes != NULL) MemFree(level->tileTypes);
     *level = (Level){ 0 };
 }
 

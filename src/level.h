@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include "platform.h"
-#include "entity_map.h"
 
 typedef enum {
     ENEMY_TONGUE,       // '1'
@@ -16,7 +15,6 @@ typedef struct {
     int       gridX;
     int       gridZ;
     EnemyType type;
-    char      name[ENTITY_NAME_LEN];   // "enemy_1", "enemy_2", ... — matches EntityMap key
 } Enemy;
 
 typedef struct {
@@ -31,19 +29,16 @@ typedef struct {
     Enemy    *enemies;
     int       enemyCount;
 
-    EntityMap entities;   // "player", "enemy_1", "enemy_2", ...
+    // Flat gridWidth*gridHeight array: static tile geometry for O(1) walkability.
+    PlatformType *tileTypes;
 } Level;
 
 Level LoadLevel(const char *filename);
 void  UnloadLevel(Level *level);
 void  DrawLevel(Level *level);
 
-// Occupancy / walkability helpers (thin wrappers over EntityMap).
-bool         IsWalkable     (const Level *level, int x, int z);
-bool         HasPlayerAt    (const Level *level, int x, int z);
-bool         HasEnemyAt     (const Level *level, int x, int z);
-const char  *GetEnemyNameAt (const Level *level, int x, int z);
-const Enemy *GetEnemyAt     (const Level *level, int x, int z);
-void         SetPlayerAt    (Level *level, int x, int z, bool present);
+bool         IsWalkable (const Level *level, int x, int z);
+bool         HasEnemyAt (const Level *level, int x, int z);
+const Enemy *GetEnemyAt (const Level *level, int x, int z);
 
 #endif

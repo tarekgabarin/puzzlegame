@@ -90,18 +90,16 @@ void UpdatePlayer(Player *p, Level *level, float dt) {
         return;
     }
 
-    SetPlayerAt(level, p->gridX, p->gridZ, false);
     p->prevGridX    = p->gridX;
     p->prevGridZ    = p->gridZ;
     p->gridX        = tx;
     p->gridZ        = tz;
     p->state        = PLAYER_WALKING;
     p->moveProgress = 0.0f;
-    SetPlayerAt(level, p->gridX, p->gridZ, true);
 
     const Enemy *e = GetEnemyAt(level, p->gridX, p->gridZ);
     if (e != NULL) {
-        TraceLog(LOG_INFO, "Player collided with %s (type %d)", e->name, e->type);
+        TraceLog(LOG_INFO, "Player collided with enemy (type %d)", e->type);
     }
 }
 
