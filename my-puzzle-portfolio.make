@@ -123,11 +123,13 @@ GENERATED += $(OBJDIR)/level.o
 GENERATED += $(OBJDIR)/level_runner.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/platform.o
+GENERATED += $(OBJDIR)/player.o
 OBJECTS += $(OBJDIR)/base_arena.o
 OBJECTS += $(OBJDIR)/level.o
 OBJECTS += $(OBJDIR)/level_runner.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/platform.o
+OBJECTS += $(OBJDIR)/player.o
 
 # Rules
 # #############################################
@@ -204,6 +206,9 @@ $(OBJDIR)/main.o: src/main.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/platform.o: src/platform.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/player.o: src/player.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

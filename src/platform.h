@@ -8,12 +8,14 @@
 #define BORDER_THICKNESS   0.01f
 
 typedef enum {
+    PLATFORM_NONE = 0,   // '.' in level files: no platform on this tile
     PLATFORM_NORMAL,
     // PLATFORM_TRAP,
     PLATFORM_EXIT,
 } PlatformType;
 
 typedef struct {
+    int id;              // gridZ * gridWidth + gridX — unique per tile
     int gridX;
     int gridZ;
     PlatformType type;

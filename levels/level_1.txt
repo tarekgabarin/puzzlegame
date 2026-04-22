@@ -1,7 +1,7 @@
 # Level 1
-# N = normal platform, E = exit, . = empty
-NNNNN
+# P = player spawn, 1-4 = enemies, N = normal, E = exit, . = empty
+PNNNN
 N...N
-N...N
+N.1.N
 N...N
 NNNNE
