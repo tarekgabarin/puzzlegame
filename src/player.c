@@ -7,6 +7,7 @@
 #define ROW_COUNT             10
 #define WALK_DURATION         0.2f    // seconds to slide one tile
 #define ANIM_FRAME_DURATION   0.12f   // seconds per animation frame
+#define PLAYER_SPRITE_SCALE   1.6f    // billboard width in tiles (1.0 = exactly one tile)
 
 // Row indices in the sprite sheet.
 #define ROW_IDLE_DOWN   0
@@ -140,11 +141,11 @@ void DrawPlayer(const Player *p, Camera3D camera) {
     pos.y = PLATFORM_HEIGHT * 0.5f;   // platform top surface
 
     Vector2 size = {
-        PLATFORM_SIZE,
-        PLATFORM_SIZE * (frameH / frameW),
+        PLATFORM_SIZE * PLAYER_SPRITE_SCALE,
+        PLATFORM_SIZE * PLAYER_SPRITE_SCALE * (frameH / frameW),
     };
     Vector3 up     = { 0.0f, 1.0f, 0.0f };
-    Vector2 origin = { 0.5f, 0.0f };   // bottom-center — feet rest on `pos`
+    Vector2 origin = { size.x * 0.5f, 0.0f };   // bottom-center — feet rest on `pos`
 
     DrawBillboardPro(camera, playerTexture, source, pos, up, size, origin, 0.0f, WHITE);
 }
