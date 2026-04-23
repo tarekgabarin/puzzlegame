@@ -15,7 +15,7 @@ int main() {
 
     // TODO: stop hardcoding this once we track which level the player is on
     // (progress save, main-menu level select, etc.)
-    RunLevel(&camera, "levels/level_1.txt");
+    RunLevel(&camera, "levels/level_weird.txt");
 
     UnloadPlayerResources();
     UnloadPlatformResources();
