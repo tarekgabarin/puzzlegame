@@ -1,40 +1,32 @@
 #include "enemy.h"
 #include "platform.h"
 #include "raymath.h"
-#include <stddef.h>
 
-#define FRAMES_PER_ROW        4
-#define ROW_COUNT             13
-#define WALK_DURATION         0.2f    // must match player WALK_DURATION for sync
-#define ANIM_FRAME_DURATION   0.12f
-#define ENEMY_SPRITE_SCALE    1.2f
+#define WALK_DURATION       0.2f    // must match player WALK_DURATION for sync
+#define BODY_SIZE           0.7f    // cube edge length (in tile units)
+#define NOSE_SIZE           0.3f    // protrusion edge length, as fraction of BODY_SIZE
 
-#define ROW_IDLE_DOWN   0
-#define ROW_IDLE_RIGHT  1
-#define ROW_IDLE_UP     2
-#define ROW_WALK_DOWN   3
-#define ROW_WALK_RIGHT  4
-#define ROW_WALK_UP     5
+static const Color ENEMY_BODY = { 220, 20, 60, 255 };   // crimson
 
-static Texture2D slimeTexture;
-static float     frameW;
-static float     frameH;
-
-void InitEnemyResources(void) {
-    slimeTexture = LoadTexture("assets/slime.png");
-    frameW = (float)slimeTexture.width  / (float)FRAMES_PER_ROW;
-    frameH = (float)slimeTexture.height / (float)ROW_COUNT;
-}
-
-void UnloadEnemyResources(void) {
-    UnloadTexture(slimeTexture);
-}
+void InitEnemyResources(void)   { /* no texture; polygonal enemy */ }
+void UnloadEnemyResources(void) { /* no texture; polygonal enemy */ }
 
 static Facing FacingFromDelta(int dx, int dz) {
     if (dz < 0) return FACING_UP;
     if (dz > 0) return FACING_DOWN;
     if (dx < 0) return FACING_LEFT;
     return FACING_RIGHT;
+}
+
+// Unit vector in world space for the direction the enemy is facing.
+static Vector3 FaceDir(Facing f) {
+    switch (f) {
+        case FACING_UP:    return (Vector3){  0.0f, 0.0f, -1.0f };
+        case FACING_DOWN:  return (Vector3){  0.0f, 0.0f,  1.0f };
+        case FACING_LEFT:  return (Vector3){ -1.0f, 0.0f,  0.0f };
+        case FACING_RIGHT: return (Vector3){  1.0f, 0.0f,  0.0f };
+    }
+    return (Vector3){ 0.0f, 0.0f, 1.0f };
 }
 
 EnemyInstance CreateEnemyInstance(const Enemy *spawn) {
@@ -59,16 +51,9 @@ void ResetEnemyInstance(EnemyInstance *e) {
     e->facing       = FACING_DOWN;
     e->state        = ENEMY_IDLE;
     e->moveProgress = 0.0f;
-    e->animFrame    = 0;
-    e->animTimer    = 0.0f;
 }
 
 void UpdateEnemyInstance(EnemyInstance *e, float dt) {
-    e->animTimer += dt;
-    if (e->animTimer >= ANIM_FRAME_DURATION) {
-        e->animTimer -= ANIM_FRAME_DURATION;
-        e->animFrame = (e->animFrame + 1) % FRAMES_PER_ROW;
-    }
     if (e->state == ENEMY_WALKING) {
         e->moveProgress += dt / WALK_DURATION;
         if (e->moveProgress >= 1.0f) {
@@ -93,7 +78,6 @@ void StepEnemyAI(EnemyInstance *e, const Level *level,
     int tz = e->gridZ + dz;
     if (!IsWalkable(level, tx, tz)) return;
 
-    // Don't pile onto another enemy's tile (by current position OR target).
     for (int i = 0; i < enemyCount; i++) {
         if (&allEnemies[i] == e) continue;
         if (allEnemies[i].gridX == tx && allEnemies[i].gridZ == tz) return;
@@ -107,48 +91,31 @@ void StepEnemyAI(EnemyInstance *e, const Level *level,
     e->moveProgress = 0.0f;
 }
 
-static void PickRowAndFlip(EnemyState state, Facing facing, int *row, bool *flip) {
-    *flip = false;
-    bool walking = (state == ENEMY_WALKING);
-    switch (facing) {
-        case FACING_DOWN:
-            *row = walking ? ROW_WALK_DOWN : ROW_IDLE_DOWN;
-            break;
-        case FACING_UP:
-            *row = walking ? ROW_WALK_UP : ROW_IDLE_UP;
-            break;
-        case FACING_LEFT:
-            *row  = walking ? ROW_WALK_RIGHT : ROW_IDLE_RIGHT;
-            *flip = true;
-            break;
-        case FACING_RIGHT:
-            *row = walking ? ROW_WALK_RIGHT : ROW_IDLE_RIGHT;
-            break;
-    }
-}
-
 void DrawEnemyInstance(const EnemyInstance *e, Camera3D camera) {
-    int row; bool flip;
-    PickRowAndFlip(e->state, e->facing, &row, &flip);
-
-    Rectangle source = {
-        e->animFrame * frameW,
-        row * frameH,
-        flip ? -frameW : frameW,
-        frameH,
-    };
+    (void)camera;   // polygonal enemy — no billboard needs the camera
 
     Vector3 prev = GridToWorld(e->prevGridX, e->prevGridZ);
     Vector3 curr = GridToWorld(e->gridX,     e->gridZ);
     Vector3 pos  = Vector3Lerp(prev, curr, e->moveProgress);
-    pos.y = PLATFORM_HEIGHT * 0.5f;
 
-    Vector2 size = {
-        PLATFORM_SIZE * ENEMY_SPRITE_SCALE,
-        PLATFORM_SIZE * ENEMY_SPRITE_SCALE * (frameH / frameW),
+    // Body sits on platform top surface.
+    Vector3 bodyCenter = {
+        pos.x,
+        PLATFORM_HEIGHT * 0.5f + BODY_SIZE * 0.5f,
+        pos.z,
     };
-    Vector3 up     = { 0.0f, 1.0f, 0.0f };
-    Vector2 origin = { size.x * 0.5f, 0.0f };
+    DrawCube     (bodyCenter, BODY_SIZE, BODY_SIZE, BODY_SIZE, ENEMY_BODY);
+    DrawCubeWires(bodyCenter, BODY_SIZE, BODY_SIZE, BODY_SIZE, BLACK);
 
-    DrawBillboardPro(camera, slimeTexture, source, pos, up, size, origin, 0.0f, WHITE);
+    // Small protruding nose indicating facing direction. Centered vertically
+    // on the body, flush with the front face.
+    float nose = BODY_SIZE * NOSE_SIZE;
+    Vector3 dir = FaceDir(e->facing);
+    Vector3 noseCenter = {
+        bodyCenter.x + dir.x * (BODY_SIZE * 0.5f + nose * 0.5f),
+        bodyCenter.y,
+        bodyCenter.z + dir.z * (BODY_SIZE * 0.5f + nose * 0.5f),
+    };
+    DrawCube     (noseCenter, nose, nose, nose, ENEMY_BODY);
+    DrawCubeWires(noseCenter, nose, nose, nose, BLACK);
 }
