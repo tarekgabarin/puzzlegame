@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "base_arena.h"
+#include "enemy.h"
 #include "platform.h"
 #include "player.h"
 #include "level_runner.h"
@@ -10,13 +11,15 @@ int main() {
 
     InitPlatformResources();
     InitPlayerResources();
+    InitEnemyResources();
 
     Camera3D camera = CreateCamera();
 
     // TODO: stop hardcoding this once we track which level the player is on
     // (progress save, main-menu level select, etc.)
-    RunLevel(&camera, "levels/level_weird.txt");
+    RunLevel(&camera, "levels/level_test.txt");
 
+    UnloadEnemyResources();
     UnloadPlayerResources();
     UnloadPlatformResources();
     CloseWindow();

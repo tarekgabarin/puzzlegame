@@ -120,6 +120,7 @@ OBJECTS :=
 
 GENERATED += $(OBJDIR)/base_arena.o
 GENERATED += $(OBJDIR)/camera_intro.o
+GENERATED += $(OBJDIR)/enemy.o
 GENERATED += $(OBJDIR)/level.o
 GENERATED += $(OBJDIR)/level_runner.o
 GENERATED += $(OBJDIR)/main.o
@@ -127,6 +128,7 @@ GENERATED += $(OBJDIR)/platform.o
 GENERATED += $(OBJDIR)/player.o
 OBJECTS += $(OBJDIR)/base_arena.o
 OBJECTS += $(OBJDIR)/camera_intro.o
+OBJECTS += $(OBJDIR)/enemy.o
 OBJECTS += $(OBJDIR)/level.o
 OBJECTS += $(OBJDIR)/level_runner.o
 OBJECTS += $(OBJDIR)/main.o
@@ -199,6 +201,9 @@ $(OBJDIR)/base_arena.o: src/base_arena.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/camera_intro.o: src/camera_intro.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/enemy.o: src/enemy.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/level.o: src/level.c

@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "raylib.h"
+#include <stdbool.h>
 #include "level.h"
 
 typedef enum { FACING_DOWN, FACING_LEFT, FACING_UP, FACING_RIGHT } Facing;
@@ -15,6 +16,10 @@ typedef struct {
     float       moveProgress;   // 0..1 while walking
     int         animFrame;      // 0..5 — column of the sheet
     float       animTimer;
+    float       deathTimer;     // seconds spent in PLAYER_DYING
+    bool        justMoved;      // set on accepted move, consumed by runner
+    int         lastMoveDx;
+    int         lastMoveDz;
 } Player;
 
 void   InitPlayerResources(void);

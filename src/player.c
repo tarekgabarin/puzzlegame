@@ -74,7 +74,10 @@ void UpdatePlayer(Player *p, Level *level, float dt) {
         return;   // ignore input mid-slide
     }
 
-    if (p->state == PLAYER_DYING) return;
+    if (p->state == PLAYER_DYING) {
+        p->deathTimer += dt;
+        return;   // runner handles the reset when timer expires
+    }
 
     Facing newFacing;
     int dx, dz;
@@ -85,11 +88,9 @@ void UpdatePlayer(Player *p, Level *level, float dt) {
     int tx = p->gridX + dx;
     int tz = p->gridZ + dz;
     if (!IsWalkable(level, tx, tz)) return;
-    if (HasEnemyAt(level, tx, tz)) {
-        // For now: treat as blocked. Future pass: allow stepping onto the enemy
-        // and trigger the dying state.
-        return;
-    }
+
+    // Note: no HasEnemyAt block — stepping onto an enemy is allowed; the runner's
+    // post-step collision check will flip us to PLAYER_DYING.
 
     p->prevGridX    = p->gridX;
     p->prevGridZ    = p->gridZ;
@@ -97,11 +98,9 @@ void UpdatePlayer(Player *p, Level *level, float dt) {
     p->gridZ        = tz;
     p->state        = PLAYER_WALKING;
     p->moveProgress = 0.0f;
-
-    const Enemy *e = GetEnemyAt(level, p->gridX, p->gridZ);
-    if (e != NULL) {
-        TraceLog(LOG_INFO, "Player collided with enemy (type %d)", e->type);
-    }
+    p->justMoved    = true;
+    p->lastMoveDx   = dx;
+    p->lastMoveDz   = dz;
 }
 
 // Map (state, facing) to the sheet row + horizontal-flip flag.
