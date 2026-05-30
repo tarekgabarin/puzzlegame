@@ -1,0 +1,12 @@
+# Tutorial Level - Engacho
+# Reach the exit (E). The cube (1) moves OPPOSITE to your direction.
+# Same-column distance-2 + a same-axis move = collision.
+# Solution: break alignment with a side step before going down.
+NNNNNNN
+NNNNNNN
+NNNPNNN
+NNNNNNN
+NNN1NNN
+NNNNNNN
+NNNENNN
+NNNNNNN

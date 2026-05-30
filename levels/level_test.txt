@@ -1,0 +1,10 @@
+# Test arena. Slime walled into top-left corner (can only move right/down).
+# Player centered with room to move in all directions.
+..NNNNNN
+.1NNNNNN
+NNNNNNNN
+NNNNNNNN
+NNNNPNNN
+NNNNNNNN
+NNNNNNNN
+NNNNNNNE
