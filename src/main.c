@@ -17,7 +17,7 @@ int main() {
 
     // TODO: stop hardcoding this once we track which level the player is on
     // (progress save, main-menu level select, etc.)
-    RunLevel(&camera, "levels/level_test.txt");
+    RunLevel(&camera, "levels/level_tutorial.txt");
 
     UnloadEnemyResources();
     UnloadPlayerResources();

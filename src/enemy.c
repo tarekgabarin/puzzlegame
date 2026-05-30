@@ -1,32 +1,21 @@
 #include "enemy.h"
 #include "platform.h"
 #include "raymath.h"
+#include "rlgl.h"
 
-#define WALK_DURATION       0.2f    // must match player WALK_DURATION for sync
-#define BODY_SIZE           0.7f    // cube edge length (in tile units)
-#define NOSE_SIZE           0.3f    // protrusion edge length, as fraction of BODY_SIZE
+#define WALK_DURATION   0.2f    // must match player WALK_DURATION for sync
+#define CUBE_SIZE       1.0f    // fills a tile so each roll lands flush
 
 static const Color ENEMY_BODY = { 220, 20, 60, 255 };   // crimson
 
-void InitEnemyResources(void)   { /* no texture; polygonal enemy */ }
-void UnloadEnemyResources(void) { /* no texture; polygonal enemy */ }
+void InitEnemyResources(void)   {}
+void UnloadEnemyResources(void) {}
 
 static Facing FacingFromDelta(int dx, int dz) {
     if (dz < 0) return FACING_UP;
     if (dz > 0) return FACING_DOWN;
     if (dx < 0) return FACING_LEFT;
     return FACING_RIGHT;
-}
-
-// Unit vector in world space for the direction the enemy is facing.
-static Vector3 FaceDir(Facing f) {
-    switch (f) {
-        case FACING_UP:    return (Vector3){  0.0f, 0.0f, -1.0f };
-        case FACING_DOWN:  return (Vector3){  0.0f, 0.0f,  1.0f };
-        case FACING_LEFT:  return (Vector3){ -1.0f, 0.0f,  0.0f };
-        case FACING_RIGHT: return (Vector3){  1.0f, 0.0f,  0.0f };
-    }
-    return (Vector3){ 0.0f, 0.0f, 1.0f };
 }
 
 EnemyInstance CreateEnemyInstance(const Enemy *spawn) {
@@ -72,10 +61,14 @@ void StepEnemyAI(EnemyInstance *e, const Level *level,
     if (e->state == ENEMY_WALKING) return;
     if (dx == 0 && dz == 0) return;
 
-    e->facing = FacingFromDelta(dx, dz);
+    // Tongue moves INVERSE to the player's input.
+    int idx = -dx;
+    int idz = -dz;
 
-    int tx = e->gridX + dx;
-    int tz = e->gridZ + dz;
+    e->facing = FacingFromDelta(idx, idz);
+
+    int tx = e->gridX + idx;
+    int tz = e->gridZ + idz;
     if (!IsWalkable(level, tx, tz)) return;
 
     for (int i = 0; i < enemyCount; i++) {
@@ -92,30 +85,57 @@ void StepEnemyAI(EnemyInstance *e, const Level *level,
 }
 
 void DrawEnemyInstance(const EnemyInstance *e, Camera3D camera) {
-    (void)camera;   // polygonal enemy — no billboard needs the camera
+    (void)camera;
 
-    Vector3 prev = GridToWorld(e->prevGridX, e->prevGridZ);
-    Vector3 curr = GridToWorld(e->gridX,     e->gridZ);
-    Vector3 pos  = Vector3Lerp(prev, curr, e->moveProgress);
+    float cubeRestY = PLATFORM_HEIGHT * 0.5f + CUBE_SIZE * 0.5f;
 
-    // Body sits on platform top surface.
-    Vector3 bodyCenter = {
-        pos.x,
-        PLATFORM_HEIGHT * 0.5f + BODY_SIZE * 0.5f,
-        pos.z,
+    if (e->state != ENEMY_WALKING) {
+        // Idle: sit flat on the tile.
+        Vector3 pos = GridToWorld(e->gridX, e->gridZ);
+        pos.y = cubeRestY;
+        DrawCube     (pos, CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, ENEMY_BODY);
+        DrawCubeWires(pos, CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, BLACK);
+        return;
+    }
+
+    // Rolling: pivot around the leading bottom edge.
+    //
+    // Pivot is the world-space line where the cube's leading bottom face meets
+    // the ground, halfway between the start tile and the destination tile.
+    // We rotate the cube around this line by `progress * 90°` so it tumbles
+    // forward exactly one tile per step.
+    Vector3 start = GridToWorld(e->prevGridX, e->prevGridZ);
+    int dx = e->gridX - e->prevGridX;
+    int dz = e->gridZ - e->prevGridZ;
+
+    Vector3 pivot = {
+        start.x + (float)dx * (PLATFORM_SIZE * 0.5f),
+        PLATFORM_HEIGHT * 0.5f,                          // platform top = cube bottom
+        start.z + (float)dz * (PLATFORM_SIZE * 0.5f),
     };
-    DrawCube     (bodyCenter, BODY_SIZE, BODY_SIZE, BODY_SIZE, ENEMY_BODY);
-    DrawCubeWires(bodyCenter, BODY_SIZE, BODY_SIZE, BODY_SIZE, BLACK);
 
-    // Small protruding nose indicating facing direction. Centered vertically
-    // on the body, flush with the front face.
-    float nose = BODY_SIZE * NOSE_SIZE;
-    Vector3 dir = FaceDir(e->facing);
-    Vector3 noseCenter = {
-        bodyCenter.x + dir.x * (BODY_SIZE * 0.5f + nose * 0.5f),
-        bodyCenter.y,
-        bodyCenter.z + dir.z * (BODY_SIZE * 0.5f + nose * 0.5f),
+    // Cube's resting center relative to the pivot at progress=0.
+    Vector3 offset = {
+        start.x - pivot.x,
+        cubeRestY - pivot.y,
+        start.z - pivot.z,
     };
-    DrawCube     (noseCenter, nose, nose, nose, ENEMY_BODY);
-    DrawCubeWires(noseCenter, nose, nose, nose, BLACK);
+
+    // Rotation axis: perpendicular to movement, horizontal. Cross(up, dir).
+    // Positive rotation tilts the top of the cube toward the movement direction.
+    float axisX = (float)dz;
+    float axisY = 0.0f;
+    float axisZ = (float)-dx;
+
+    float angle = e->moveProgress * 90.0f;   // degrees
+
+    rlPushMatrix();
+        rlTranslatef(pivot.x, pivot.y, pivot.z);
+        rlRotatef(angle, axisX, axisY, axisZ);
+        rlTranslatef(offset.x, offset.y, offset.z);
+
+        Vector3 origin = { 0.0f, 0.0f, 0.0f };
+        DrawCube     (origin, CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, ENEMY_BODY);
+        DrawCubeWires(origin, CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, BLACK);
+    rlPopMatrix();
 }
