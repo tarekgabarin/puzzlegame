@@ -1,5 +1,5 @@
-#include "base_arena.h"
-#include "platform.h"
+#include "camera/base_arena.h"
+#include "game/platform.h"
 #include "raymath.h"
 #include <math.h>
 

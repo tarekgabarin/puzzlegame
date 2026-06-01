@@ -2,7 +2,7 @@
 #define LEVEL_H
 
 #include <stdbool.h>
-#include "platform.h"
+#include "game/platform.h"
 
 typedef enum {
     ENEMY_TONGUE,       // '1'

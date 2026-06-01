@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 #include <stdbool.h>
-#include "level.h"
+#include "game/level.h"
 
 typedef enum { FACING_DOWN, FACING_LEFT, FACING_UP, FACING_RIGHT } Facing;
 typedef enum { PLAYER_IDLE, PLAYER_WALKING, PLAYER_DYING } PlayerState;

@@ -1,5 +1,5 @@
-#include "enemy.h"
-#include "platform.h"
+#include "game/enemy.h"
+#include "game/platform.h"
 #include "raymath.h"
 #include "rlgl.h"
 

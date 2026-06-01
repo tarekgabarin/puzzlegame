@@ -2,7 +2,7 @@
 #define BASE_ARENA_H
 
 #include "raylib.h"
-#include "level.h"
+#include "game/level.h"
 
 Camera3D CreateCamera(void);
 

@@ -1,11 +1,11 @@
 #include "raylib.h"
 #include <stddef.h>
-#include "base_arena.h"
-#include "camera_intro.h"
-#include "enemy.h"
-#include "level.h"
-#include "player.h"
-#include "level_runner.h"
+#include "camera/base_arena.h"
+#include "camera/camera_intro.h"
+#include "game/enemy.h"
+#include "game/level.h"
+#include "game/player.h"
+#include "app/level_runner.h"
 
 #define DEATH_DURATION   0.6f   // seconds the dying animation plays before reset
 
