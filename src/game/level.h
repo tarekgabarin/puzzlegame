@@ -29,6 +29,10 @@ typedef struct {
     Enemy    *enemies;
     int       enemyCount;
 
+    // Move budget for this level (parsed from a '# steps: N' directive in the
+    // level file; defaults to DEFAULT_MOVE_LIMIT when absent).
+    int       moveLimit;
+
     // Flat gridWidth*gridHeight array: static tile geometry for O(1) walkability.
     PlatformType *tileTypes;
 } Level;
@@ -38,6 +42,7 @@ void  UnloadLevel(Level *level);
 void  DrawLevel(Level *level);
 
 bool         IsWalkable (const Level *level, int x, int z);
+bool         IsExitTile (const Level *level, int x, int z);
 bool         HasEnemyAt (const Level *level, int x, int z);
 const Enemy *GetEnemyAt (const Level *level, int x, int z);
 

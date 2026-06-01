@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// Default move budget when a level file has no '# steps: N' directive.
+#define DEFAULT_MOVE_LIMIT 28
+
 // --- Character classification ---------------------------------------------
 
 // Every tile-placing character (N/E/P/1-4) implies a platform underneath.
@@ -48,11 +51,46 @@ static bool IsSkippableLine(const char *line, int length) {
     return true;
 }
 
+// Parse a '# steps: N' directive. Accepts optional leading whitespace, the '#',
+// optional whitespace, the keyword "steps", an optional ':', whitespace, then a
+// non-negative integer. Returns true (and writes *out) only on a full match.
+static bool ParseStepsDirective(const char *line, int length, int *out) {
+    int i = 0;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+    if (i >= length || line[i] != '#') return false;
+    i++;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+
+    const char *kw = "steps";
+    for (int k = 0; kw[k] != '\0'; k++) {
+        if (i >= length || line[i] != kw[k]) return false;
+        i++;
+    }
+
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+    if (i < length && line[i] == ':') i++;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+
+    if (i >= length || line[i] < '0' || line[i] > '9') return false;
+    int value = 0;
+    while (i < length && line[i] >= '0' && line[i] <= '9') {
+        value = value * 10 + (line[i] - '0');
+        i++;
+    }
+    *out = value;
+    return true;
+}
+
 // --- Level helpers --------------------------------------------------------
 
 bool IsWalkable(const Level *level, int x, int z) {
     if (x < 0 || x >= level->gridWidth || z < 0 || z >= level->gridHeight) return false;
     return level->tileTypes[z * level->gridWidth + x] != PLATFORM_NONE;
+}
+
+bool IsExitTile(const Level *level, int x, int z) {
+    if (x < 0 || x >= level->gridWidth || z < 0 || z >= level->gridHeight) return false;
+    return level->tileTypes[z * level->gridWidth + x] == PLATFORM_EXIT;
 }
 
 const Enemy *GetEnemyAt(const Level *level, int x, int z) {
@@ -84,6 +122,8 @@ Level LoadLevel(const char *filename) {
     int gridHeight    = 0;
     int gridWidth     = 0;
     bool foundPlayer  = false;
+    bool foundSteps   = false;
+    int  moveLimit    = DEFAULT_MOVE_LIMIT;
 
     int textLen   = (int)TextLength(text);
     int lineStart = 0;
@@ -106,6 +146,13 @@ Level LoadLevel(const char *filename) {
                 }
                 if (cols > gridWidth) gridWidth = cols;
                 gridHeight++;
+            } else {
+                // Comment line — look for the '# steps: N' directive.
+                int steps;
+                if (ParseStepsDirective(line, lineLen, &steps)) {
+                    moveLimit  = steps;
+                    foundSteps = true;
+                }
             }
 
             lineStart = i + 1;
@@ -116,6 +163,12 @@ Level LoadLevel(const char *filename) {
     level.enemyCount    = enemyCount;
     level.gridWidth     = gridWidth;
     level.gridHeight    = gridHeight;
+    level.moveLimit     = moveLimit;
+
+    if (!foundSteps) {
+        TraceLog(LOG_INFO, "LoadLevel: '%s' has no '# steps:' directive; defaulting to %d moves",
+                 filename, DEFAULT_MOVE_LIMIT);
+    }
 
     if (gridWidth == 0 || gridHeight == 0) {
         UnloadFileText(text);

@@ -14,6 +14,8 @@
 #define PALETTE_H      150       // palette area at the top (fits 2 rows of buttons + Selected line)
 #define STATUS_H       32        // status bar at the bottom
 
+#define DEFAULT_MOVE_LIMIT 28    // default step budget for a new level
+
 typedef struct {
     char        ch;
     const char *name;
@@ -40,6 +42,7 @@ typedef struct {
     char grid[EDITOR_MAX_H][EDITOR_MAX_W];
     int  width;
     int  height;
+    int  moveLimit;
     char paint;
     char filename[64];
     char status[128];
@@ -53,9 +56,10 @@ static void ClearGrid(Editor *e) {
 
 static void EditorReset(Editor *e) {
     ClearGrid(e);
-    e->width  = DEFAULT_W;
-    e->height = DEFAULT_H;
-    e->paint  = 'N';
+    e->width     = DEFAULT_W;
+    e->height    = DEFAULT_H;
+    e->moveLimit = DEFAULT_MOVE_LIMIT;
+    e->paint     = 'N';
     e->filename[0] = '\0';
     snprintf(e->status, sizeof(e->status), "New level");
 }
@@ -113,6 +117,7 @@ static void EditorSave(Editor *e) {
         return;
     }
     fprintf(f, "# Created with editor — Engacho\n");
+    fprintf(f, "# steps: %d\n", e->moveLimit);
     for (int z = 0; z < e->height; z++) {
         for (int x = 0; x < e->width; x++) fputc(e->grid[z][x], f);
         fputc('\n', f);
@@ -121,6 +126,35 @@ static void EditorSave(Editor *e) {
 
     const char *suffix = GridHas(e, 'E') ? "" : " (warning: no Exit)";
     snprintf(e->status, sizeof(e->status), "Saved to %s%s", fullpath, suffix);
+}
+
+// Parse a '# steps: N' directive (mirrors the loader in level.c). Returns true
+// and writes *out only on a full match.
+static bool ParseStepsLine(const char *line, int length, int *out) {
+    int i = 0;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+    if (i >= length || line[i] != '#') return false;
+    i++;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+
+    const char *kw = "steps";
+    for (int k = 0; kw[k] != '\0'; k++) {
+        if (i >= length || line[i] != kw[k]) return false;
+        i++;
+    }
+
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+    if (i < length && line[i] == ':') i++;
+    while (i < length && (line[i] == ' ' || line[i] == '\t')) i++;
+
+    if (i >= length || line[i] < '0' || line[i] > '9') return false;
+    int value = 0;
+    while (i < length && line[i] >= '0' && line[i] <= '9') {
+        value = value * 10 + (line[i] - '0');
+        i++;
+    }
+    *out = value;
+    return true;
 }
 
 static void EditorLoad(Editor *e) {
@@ -141,6 +175,7 @@ static void EditorLoad(Editor *e) {
     }
 
     ClearGrid(e);
+    e->moveLimit = DEFAULT_MOVE_LIMIT;
     int row = 0;
     int textLen = (int)TextLength(text);
     int lineStart = 0;
@@ -157,6 +192,12 @@ static void EditorLoad(Editor *e) {
                 if (ch == ' ' || ch == '\t' || ch == '\r') continue;
                 if (ch == '#') skip = true;
                 break;
+            }
+
+            // Comment lines may carry the '# steps: N' directive.
+            if (skip) {
+                int steps;
+                if (ParseStepsLine(line, lineLen, &steps)) e->moveLimit = steps;
             }
 
             if (!skip && row < EDITOR_MAX_H) {
@@ -212,8 +253,10 @@ void RunEditor(void) {
     bool filenameEdit = false;
     int  widthSpin    = ed.width;
     int  heightSpin   = ed.height;
+    int  stepsSpin    = ed.moveLimit;
     bool widthEdit    = false;
     bool heightEdit   = false;
+    bool stepsEdit    = false;
 
     while (!WindowShouldClose()) {
         int screenW = GetScreenWidth();
@@ -248,7 +291,7 @@ void RunEditor(void) {
         // Paint only when the click is on the grid and no text field is being
         // edited (avoid swallowing the click meant for a focused widget).
         if (hoverX >= 0 &&
-            !filenameEdit && !widthEdit && !heightEdit &&
+            !filenameEdit && !widthEdit && !heightEdit && !stepsEdit &&
             IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
             PaintCell(&ed, hoverX, hoverZ, ed.paint);
         }
@@ -384,6 +427,17 @@ void RunEditor(void) {
                 }
                 ed.height = heightSpin;
             }
+            py += 36;
+
+            // Step Limit — the level's move budget, written as '# steps: N'.
+            DrawText("Steps:", px, py, 16, DARKGRAY);
+            Rectangle sRect = { (float)(px + 80), (float)py - 4, 140, 28 };
+            if (GuiSpinner(sRect, NULL, &stepsSpin, 1, 999, stepsEdit)) {
+                stepsEdit = !stepsEdit;
+            }
+            if (stepsSpin != ed.moveLimit) {
+                ed.moveLimit = stepsSpin;
+            }
             py += 44;
 
             // Save / Load / New
@@ -395,11 +449,13 @@ void RunEditor(void) {
                 EditorLoad(&ed);
                 widthSpin  = ed.width;
                 heightSpin = ed.height;
+                stepsSpin  = ed.moveLimit;
             }
             if (GuiButton((Rectangle){ (float)px + 2 * (btnW + 8),      (float)py, btnW, 36 }, "New")) {
                 EditorReset(&ed);
                 widthSpin  = ed.width;
                 heightSpin = ed.height;
+                stepsSpin  = ed.moveLimit;
             }
             py += 48;
 

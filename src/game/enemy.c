@@ -61,14 +61,11 @@ void StepEnemyAI(EnemyInstance *e, const Level *level,
     if (e->state == ENEMY_WALKING) return;
     if (dx == 0 && dz == 0) return;
 
-    // Tongue moves INVERSE to the player's input.
-    int idx = -dx;
-    int idz = -dz;
+    // Tongue mirrors the player's input (moves in the same direction).
+    e->facing = FacingFromDelta(dx, dz);
 
-    e->facing = FacingFromDelta(idx, idz);
-
-    int tx = e->gridX + idx;
-    int tz = e->gridZ + idz;
+    int tx = e->gridX + dx;
+    int tz = e->gridZ + dz;
     if (!IsWalkable(level, tx, tz)) return;
 
     for (int i = 0; i < enemyCount; i++) {
