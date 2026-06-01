@@ -3,8 +3,8 @@
 
 #include "raylib.h"
 #include <stdbool.h>
-#include "level.h"
-#include "player.h"   // for Facing
+#include "game/level.h"
+#include "game/player.h"   // for Facing
 
 typedef enum { ENEMY_IDLE, ENEMY_WALKING } EnemyState;
 

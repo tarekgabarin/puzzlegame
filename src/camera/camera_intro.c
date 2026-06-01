@@ -1,4 +1,4 @@
-#include "camera_intro.h"
+#include "camera/camera_intro.h"
 #include <math.h>
 
 #define INTRO_DURATION               2.2f

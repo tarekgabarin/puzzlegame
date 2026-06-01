@@ -199,7 +199,7 @@ if (downloadRaylib) then
         files {"../src/**.c", "../src/**.cpp", "../src/**.h", "../src/**.hpp", "../include/**.h", "../include/**.hpp"}
         
         filter {"system:windows", "action:vs*"}
-            files {"../src/*.rc", "../src/*.ico"}
+            files {"../src/resources/*.rc", "../src/resources/*.ico"}
             files {"../resources/**"}
 
         filter{}

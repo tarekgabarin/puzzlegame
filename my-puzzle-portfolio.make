@@ -120,18 +120,24 @@ OBJECTS :=
 
 GENERATED += $(OBJDIR)/base_arena.o
 GENERATED += $(OBJDIR)/camera_intro.o
+GENERATED += $(OBJDIR)/editor.o
 GENERATED += $(OBJDIR)/enemy.o
+GENERATED += $(OBJDIR)/gui_impl.o
 GENERATED += $(OBJDIR)/level.o
 GENERATED += $(OBJDIR)/level_runner.o
 GENERATED += $(OBJDIR)/main.o
+GENERATED += $(OBJDIR)/menu.o
 GENERATED += $(OBJDIR)/platform.o
 GENERATED += $(OBJDIR)/player.o
 OBJECTS += $(OBJDIR)/base_arena.o
 OBJECTS += $(OBJDIR)/camera_intro.o
+OBJECTS += $(OBJDIR)/editor.o
 OBJECTS += $(OBJDIR)/enemy.o
+OBJECTS += $(OBJDIR)/gui_impl.o
 OBJECTS += $(OBJDIR)/level.o
 OBJECTS += $(OBJDIR)/level_runner.o
 OBJECTS += $(OBJDIR)/main.o
+OBJECTS += $(OBJDIR)/menu.o
 OBJECTS += $(OBJDIR)/platform.o
 OBJECTS += $(OBJDIR)/player.o
 
@@ -197,28 +203,37 @@ endif
 # File Rules
 # #############################################
 
-$(OBJDIR)/base_arena.o: src/base_arena.c
+$(OBJDIR)/editor.o: src/app/editor.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/camera_intro.o: src/camera_intro.c
+$(OBJDIR)/level_runner.o: src/app/level_runner.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/enemy.o: src/enemy.c
+$(OBJDIR)/menu.o: src/app/menu.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/level.o: src/level.c
+$(OBJDIR)/base_arena.o: src/camera/base_arena.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/level_runner.o: src/level_runner.c
+$(OBJDIR)/camera_intro.o: src/camera/camera_intro.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/enemy.o: src/game/enemy.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/level.o: src/game/level.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/platform.o: src/game/platform.c
+	@echo "$(notdir $<)"
+	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/player.o: src/game/player.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: src/main.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/platform.o: src/platform.c
-	@echo "$(notdir $<)"
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/player.o: src/player.c
+$(OBJDIR)/gui_impl.o: src/vendor/gui_impl.c
 	@echo "$(notdir $<)"
 	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 

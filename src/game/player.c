@@ -1,5 +1,5 @@
-#include "player.h"
-#include "platform.h"
+#include "game/player.h"
+#include "game/platform.h"
 #include "raymath.h"
 #include <stddef.h>
 

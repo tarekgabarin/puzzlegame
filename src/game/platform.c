@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "game/platform.h"
 
 // The one shared platform model. Loaded once at startup and reused by every
 // platform instance. Kept static so it is private to this translation unit.
